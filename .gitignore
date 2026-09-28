@@ -1,0 +1,43 @@
+# Dependencias
+node_modules/
+
+# Variables y secretos
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Backups
+*-backup*/
+backup/
+backups/
+*.sql
+*.sql.gz
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*~
+
+# Archivos de respaldo creados durante desarrollo
+*.pre-*
+*.bak
+*.old
+
+# Sistema operativo / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Cobertura / pruebas
+coverage/
+.nyc_output/
+
+# Archivos generados
+uploads/
+tmp/

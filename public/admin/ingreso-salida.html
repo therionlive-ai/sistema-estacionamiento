@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LKCO Estacionamiento - Ingreso / Salida</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../css/dashboard.css" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+        .card { border: none; box-shadow: 0 0 15px rgba(0,0,0,.05); }
+        .section-title { font-weight: 600; }
+        .vehicle-types { display:flex; flex-wrap:wrap; gap:.6rem; }
+        .vehicle-types .btn { min-width:150px; }
+        .vehicle-types .btn i { margin-right:.45rem; }
+
+        .ticket-preview {
+            background:#fff;
+            border:1px dashed #adb5bd;
+            border-radius:8px;
+            padding:18px;
+            max-width:420px;
+            margin:18px auto 0;
+        }
+
+        .ticket-logo {
+            max-width:90px;
+            max-height:70px;
+            object-fit:contain;
+            margin-bottom:8px;
+        }
+
+        .ticket-divider {
+            border:0;
+            border-top:1px dashed #777;
+            margin:10px 0;
+        }
+
+        .ticket-total {
+            font-size:1.25rem;
+            font-weight:700;
+        }
+
+        .status-box {
+            border-radius:8px;
+            padding:10px 14px;
+            font-size:.92rem;
+        }
+
+        .status-open {
+            background:#d1e7dd;
+            color:#0f5132;
+        }
+
+        .status-closed {
+            background:#f8d7da;
+            color:#842029;
+        }
+
+        .no-print { display:flex; gap:.5rem; }
+
+        @media print {
+            .no-print { display:none !important; }
+            .ticket-preview {
+                border:none;
+                box-shadow:none;
+                max-width:none;
+                margin:0;
+            }
+        }
+    </style>
+
+    <script>
+        if (!localStorage.getItem('token')) {
+            window.location.href = '/';
+        }
+    </script>
+</head>
+
+<body>
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo-container">
+            <div class="logo-circle"><span class="logo-text">LK</span></div>
+        </div>
+        <h5 class="mt-3 text-white">LKCO Estacionamiento</h5>
+    </div>
+
+    <nav class="sidebar-nav">
+        <ul class="nav flex-column">
+            <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></a></li>
+            <li class="nav-item"><a href="vehiculos.html" class="nav-link"><i class="fas fa-car"></i><span>Vehículos</span></a></li>
+            <li class="nav-item"><a href="ingreso-salida.html" class="nav-link active"><i class="fas fa-right-left"></i><span>Ingreso / Salida</span></a></li>
+            <li class="nav-item"><a href="mensualidades.html" class="nav-link"><i class="fas fa-calendar-check"></i><span>Mensualidades</span></a></li>
+            <li class="nav-item admin-only"><a href="configuracion.html" class="nav-link"><i class="fas fa-gear"></i><span>Configuración</span></a></li>
+            <li class="nav-item admin-only"><a href="tipos-vehiculos.html" class="nav-link"><i class="fas fa-tags"></i><span>Tipos de Vehículos</span></a></li>
+            <li class="nav-item admin-only"><a href="tarifas.html" class="nav-link"><i class="fas fa-money-bill-wave"></i><span>Tarifas</span></a></li>
+            <li class="nav-item admin-only"><a href="fiscal.html" class="nav-link"><i class="fas fa-file-invoice-dollar"></i><span>Registro Tributario</span></a></li>
+                <li class="nav-item admin-only"><a href="convenios.html" class="nav-link"><i class="fas fa-handshake"></i><span>Convenios</span></a></li>
+                <li class="nav-item admin-only"><a href="usuarios.html" class="nav-link"><i class="fas fa-users"></i><span>Usuarios</span></a></li>
+            <li class="nav-item admin-only"><a href="reportes.html" class="nav-link"><i class="fas fa-chart-bar"></i><span>Reportes</span></a></li>
+        </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a href="#" class="nav-link" id="btnLogout">
+            <i class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span>
+        </a>
+    </div>
+</div>
+
+<div class="main-content">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <button class="btn btn-link sidebar-toggle"><i class="fas fa-bars"></i></button>
+            <div class="navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="nav-link">
+                            <i class="fas fa-user-circle me-2"></i>
+                            <span id="userName">Usuario</span>
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+            <div>
+                <h4 class="mb-1">Ingreso / Salida</h4>
+                <div class="text-muted" id="empresaNombre">Cargando establecimiento...</div>
+            </div>
+            <div id="turnoEstado" class="status-box status-closed">
+                Verificando turno...
+            </div>
+        </div>
+
+        <div id="mensajePagina" class="alert d-none" role="alert"></div>
+
+        <div class="row g-4">
+            <!-- INGRESO -->
+            <div class="col-12 col-xl-6">
+                <div class="card h-100">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 section-title">
+                            <i class="fas fa-right-to-bracket me-2 text-success"></i>
+                            Registrar ingreso
+                        </h5>
+                    </div>
+
+                    <div class="card-body">
+                        <form id="formIngreso">
+                            <div class="mb-3">
+                                <label for="ingPlaca" class="form-label">Placa</label>
+                                <input
+                                    type="text"
+                                    id="ingPlaca"
+                                    class="form-control form-control-lg text-uppercase"
+                                    placeholder="Ej. HBC1234"
+                                    maxlength="12"
+                                    autocomplete="off"
+                                    required
+                                >
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Tipo de vehículo</label>
+                                <div id="tiposContainer" class="vehicle-types">
+                                    <span class="text-muted">Cargando tipos...</span>
+                                </div>
+                            </div>
+
+                            <button id="btnIngreso" class="btn btn-success btn-lg w-100" type="submit" disabled>
+                                <i class="fas fa-ticket me-2"></i>
+                                Registrar ingreso
+                            </button>
+                        </form>
+
+                        <div id="compIngreso" class="ticket-preview d-none">
+                            <div id="compIngresoBody"></div>
+
+                            <div class="no-print mt-3 justify-content-center">
+                                <button class="btn btn-outline-secondary btn-sm" id="btnPrintIngreso58">
+                                    <i class="fas fa-print me-1"></i>58 mm
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" id="btnPrintIngreso80">
+                                    <i class="fas fa-print me-1"></i>80 mm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SALIDA -->
+            <div class="col-12 col-xl-6">
+                <div class="card h-100">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0 section-title">
+                            <i class="fas fa-right-from-bracket me-2 text-danger"></i>
+                            Salida y cobro
+                        </h5>
+                    </div>
+
+                    <div class="card-body">
+                        <form id="formSalida">
+                            <div class="mb-3">
+                                <label for="salPlaca" class="form-label">Placa</label>
+                                <input
+                                    type="text"
+                                    id="salPlaca"
+                                    class="form-control form-control-lg text-uppercase"
+                                    placeholder="Ej. HBC1234"
+                                    maxlength="12"
+                                    autocomplete="off"
+                                    required
+                                >
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="salMetodo" class="form-label">Método de pago</label>
+                                <select id="salMetodo" class="form-select form-select-lg">
+                                    <option value="efectivo">Efectivo</option>
+                                    <option value="tarjeta">Tarjeta</option>
+                                    <option value="QR">QR</option>
+                                </select>
+                            </div>
+
+                            <button id="btnSalida" class="btn btn-danger btn-lg w-100" type="submit" disabled>
+                                <i class="fas fa-calculator me-2"></i>
+                                Calcular salida
+                            </button>
+                        </form>
+
+                        <div id="compSalida" class="ticket-preview d-none">
+                            <div id="compSalidaBody"></div>
+
+                            <div class="no-print mt-3 justify-content-center">
+                                <button class="btn btn-outline-secondary btn-sm" id="btnPrintSalida58">
+                                    <i class="fas fa-print me-1"></i>58 mm
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" id="btnPrintSalida80">
+                                    <i class="fas fa-print me-1"></i>80 mm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de pago -->
+<div class="modal fade" id="pagoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar cobro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="mb-3">
+                    <div class="text-muted">Total a pagar</div>
+                    <div id="pagoTotal" class="fs-3 fw-bold">L 0.00</div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Medios de pago</label>
+                    <div id="pagosContainer" class="d-flex flex-column gap-2"></div>
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="btnAddPago">
+                        <i class="fas fa-plus me-1"></i>Agregar medio de pago
+                    </button>
+                </div>
+
+                <div class="alert alert-info py-2 mb-0">
+                    <div>Pagado: <strong id="pagoSum">L 0.00</strong></div>
+                    <div>Diferencia: <strong id="pagoDiff">Falta: L 0.00</strong></div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" id="btnConfirmPagos">
+                    Confirmar pago
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<script src="../js/datetime.js"></script>
+
+<script>
+(function () {
+    'use strict';
+
+    const token = localStorage.getItem('token');
+    const authHeaders = () => ({ 'Authorization': `Bearer ${token}` });
+
+    let empresaInfo = {};
+    let ultimoIngreso = null;
+    let ultimaSalida = null;
+    let turnoAbierto = false;
+    let facturaPendiente = null;
+
+    const $ = (id) => document.getElementById(id);
+
+    $('userName').textContent = localStorage.getItem('userName') || 'Usuario';
+
+    const role = localStorage.getItem('userRole');
+    if (role !== 'admin') {
+        document.querySelectorAll('.admin-only').forEach(el => el.classList.add('d-none'));
+    }
+
+    $('btnLogout').addEventListener('click', function (e) {
+        e.preventDefault();
+        localStorage.clear();
+        window.location.href = '/';
+    });
+
+    document.querySelector('.sidebar-toggle').addEventListener('click', function () {
+        document.querySelector('.sidebar').classList.toggle('show');
+    });
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function money(value) {
+        return new Intl.NumberFormat('es-HN', {
+            style: 'currency',
+            currency: 'HNL',
+            minimumFractionDigits: 2
+        }).format(Number(value || 0)).replace('HNL', 'L');
+    }
+
+    function fecha(value) {
+        if (typeof window.formatEmpresaDateTime === 'function') {
+            return window.formatEmpresaDateTime(value);
+        }
+
+        if (!value) return '';
+        const d = new Date(value);
+        return isNaN(d.getTime()) ? String(value) : d.toLocaleString('es-HN');
+    }
+
+    function mostrarMensaje(texto, tipo = 'info') {
+        const box = $('mensajePagina');
+        box.className = `alert alert-${tipo}`;
+        box.textContent = texto;
+        box.classList.remove('d-none');
+    }
+
+    function ocultarMensaje() {
+        $('mensajePagina').classList.add('d-none');
+    }
+
+    async function cargarEmpresa() {
+        try {
+            const response = await fetch('/api/empresa/me', {
+                headers: authHeaders()
+            });
+
+            if (!response.ok) throw new Error('No se pudo obtener la empresa');
+
+            const json = await response.json();
+            empresaInfo = json.data || {};
+
+            $('empresaNombre').textContent = empresaInfo.nombre || 'Estacionamiento';
+
+            try {
+                const configResponse = await fetch('/api/empresa/config', {
+                    headers: authHeaders()
+                });
+
+                if (configResponse.ok) {
+                    const config = await configResponse.json();
+                    Object.assign(empresaInfo, config.data || {});
+                }
+            } catch (_) {}
+
+            try {
+                const logoResponse = await fetch('/api/empresa/logo', {
+                    headers: authHeaders()
+                });
+
+                if (logoResponse.ok) {
+                    const blob = await logoResponse.blob();
+                    empresaInfo.logo_url = await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result);
+                        reader.readAsDataURL(blob);
+                    });
+                }
+            } catch (_) {}
+        } catch (error) {
+            console.error(error);
+            $('empresaNombre').textContent = 'No se pudo cargar el establecimiento';
+        }
+    }
+
+    async function cargarTurno() {
+        try {
+            const response = await fetch('/api/turnos/actual', {
+                headers: authHeaders()
+            });
+
+            const json = await response.json();
+
+            if (!response.ok) {
+                throw new Error(json.message || 'No se pudo consultar el turno');
+            }
+
+            turnoAbierto = !!json.data;
+
+            const estado = $('turnoEstado');
+
+            if (turnoAbierto) {
+                estado.className = 'status-box status-open';
+                estado.innerHTML = '<i class="fas fa-circle-check me-1"></i> Turno abierto';
+                $('btnIngreso').disabled = false;
+                $('btnSalida').disabled = false;
+            } else {
+                estado.className = 'status-box status-closed';
+                estado.innerHTML = '<i class="fas fa-circle-xmark me-1"></i> No hay turno abierto';
+                $('btnIngreso').disabled = true;
+                $('btnSalida').disabled = true;
+                mostrarMensaje('Debe abrir un turno antes de registrar ingresos o salidas.', 'warning');
+            }
+        } catch (error) {
+            console.error(error);
+            $('btnIngreso').disabled = true;
+            $('btnSalida').disabled = true;
+            mostrarMensaje('No se pudo verificar el turno actual.', 'danger');
+        }
+    }
+
+    async function cargarTiposVehiculos() {
+        const container = $('tiposContainer');
+
+        try {
+            const response = await fetch('/api/tipos-vehiculos/activos', {
+                headers: authHeaders()
+            });
+
+            const json = await response.json();
+
+            if (!response.ok || !json.success) {
+                throw new Error(json.message || 'No se pudieron cargar los tipos');
+            }
+
+            const tipos = (json.data || []).filter(tipo =>
+                tipo.codigo === 'automovil' || tipo.codigo === 'motocicleta'
+            );
+
+            container.innerHTML = '';
+
+            if (!tipos.length) {
+                container.innerHTML = '<div class="alert alert-warning mb-0">No hay tipos de vehículos activos configurados.</div>';
+                return;
+            }
+
+            tipos.forEach((tipo, index) => {
+                const id = `tipo_${tipo.id_tipo}`;
+
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.className = 'btn-check';
+                radio.name = 'ingTipo';
+                radio.id = id;
+                radio.value = tipo.id_tipo;
+                radio.autocomplete = 'off';
+                if (index === 0) radio.checked = true;
+
+                const label = document.createElement('label');
+                label.className = 'btn btn-outline-primary';
+                label.htmlFor = id;
+
+                const icon = tipo.codigo === 'automovil'
+                    ? 'fa-car-side'
+                    : 'fa-motorcycle';
+
+                label.innerHTML = `<i class="fas ${icon}"></i>${escapeHtml(tipo.nombre)}`;
+
+                container.appendChild(radio);
+                container.appendChild(label);
+            });
+        } catch (error) {
+            console.error(error);
+            container.innerHTML = '<div class="alert alert-danger mb-0">No se pudieron cargar los tipos de vehículos.</div>';
+        }
+    }
+
+    function renderBarcode(id, value) {
+        setTimeout(() => {
+            const svg = document.getElementById(id);
+            if (!svg || !value || typeof window.JsBarcode !== 'function') return;
+
+            try {
+                JsBarcode(svg, String(value), {
+                    format: 'CODE128',
+                    displayValue: true,
+                    fontSize: 11,
+                    height: 42,
+                    margin: 4
+                });
+            } catch (error) {
+                console.error('Error generando código de barras:', error);
+            }
+        }, 50);
+    }
+
+    function renderTicketIngreso(data) {
+        const logo = empresaInfo.logo_url
+            ? `<img class="ticket-logo" src="${empresaInfo.logo_url}" alt="Logo">`
+            : '';
+
+        const horario = empresaInfo.operacion_24h
+            ? '24 horas'
+            : `${empresaInfo.horario_apertura || ''} - ${empresaInfo.horario_cierre || ''}`;
+
+        return `
+            <div class="text-center">
+                ${logo}
+                <div class="fw-bold">${escapeHtml(empresaInfo.nombre || 'LKCO Estacionamiento')}</div>
+                ${empresaInfo.nit ? `<div>NIT: ${escapeHtml(empresaInfo.nit)}</div>` : ''}
+                ${empresaInfo.direccion ? `<div>${escapeHtml(empresaInfo.direccion)}</div>` : ''}
+                ${empresaInfo.telefono ? `<div>Tel. ${escapeHtml(empresaInfo.telefono)}</div>` : ''}
+                ${horario.trim() !== '-' ? `<div>Horario: ${escapeHtml(horario)}</div>` : ''}
+            </div>
+
+            <hr class="ticket-divider">
+
+            <div class="text-center fw-bold">COMPROBANTE DE INGRESO</div>
+
+            <div class="mt-2">
+                <div><strong>Ticket:</strong> #${String(data.movimientoId).padStart(6, '0')}</div>
+                <div><strong>Placa:</strong> ${escapeHtml(data.placa)}</div>
+                <div><strong>Tipo:</strong> ${escapeHtml(data.tipo)}</div>
+                <div><strong>Entrada:</strong> ${escapeHtml(fecha(data.fechaEntrada))}</div>
+            </div>
+
+            <hr class="ticket-divider">
+
+            <div>
+                <div class="fw-bold">Tarifas</div>
+                <div>Minuto: ${money(data.tarifa?.valor_minuto)}</div>
+                <div>Hora: ${money(data.tarifa?.valor_hora)}</div>
+                <div>Día: ${money(data.tarifa?.valor_dia_completo)}</div>
+            </div>
+
+            <hr class="ticket-divider">
+
+            <div class="text-center">
+                <div>Atendido por:</div>
+                <strong>${escapeHtml(localStorage.getItem('userName') || '')}</strong>
+            </div>
+
+            <div class="text-center mt-2">
+                <svg id="barcodeIngreso"></svg>
+                <div class="small text-muted">Conserve este ticket para su salida</div>
+            </div>
+        `;
+    }
+
+    function renderTicketSalida(data) {
+        const logo = empresaInfo.logo_url
+            ? `<img class="ticket-logo" src="${empresaInfo.logo_url}" alt="Logo">`
+            : '';
+
+        const pagos = Array.isArray(data.pagosList) ? data.pagosList : [];
+
+        return `
+            <div class="text-center">
+                ${logo}
+                <div class="fw-bold">${escapeHtml(empresaInfo.nombre || 'LKCO Estacionamiento')}</div>
+                ${empresaInfo.nit ? `<div>NIT: ${escapeHtml(empresaInfo.nit)}</div>` : ''}
+                ${empresaInfo.direccion ? `<div>${escapeHtml(empresaInfo.direccion)}</div>` : ''}
+                ${empresaInfo.telefono ? `<div>Tel. ${escapeHtml(empresaInfo.telefono)}</div>` : ''}
+            </div>
+
+            <hr class="ticket-divider">
+
+            <div class="text-center fw-bold">COMPROBANTE DE SALIDA</div>
+
+            <div class="mt-2">
+                <div><strong>Ticket:</strong> #${String(data.movimientoId).padStart(6, '0')}</div>
+                <div><strong>Placa:</strong> ${escapeHtml(data.placa)}</div>
+                <div><strong>Tipo:</strong> ${escapeHtml(data.tipo)}</div>
+                <div><strong>Entrada:</strong> ${escapeHtml(fecha(data.fechaEntrada))}</div>
+                <div><strong>Salida:</strong> ${escapeHtml(fecha(data.fechaSalida))}</div>
+                <div><strong>Tiempo:</strong> ${Number(data.detalleTiempo?.dias || 0)}d ${Number(data.detalleTiempo?.horas || 0)}h ${Number(data.detalleTiempo?.minutos || 0)}m</div>
+            </div>
+
+            <hr class="ticket-divider">
+
+            <div class="ticket-total text-center">
+                TOTAL: ${money(data.total)}
+            </div>
+
+            ${pagos.length ? `
+                <hr class="ticket-divider">
+                <div class="fw-bold">Forma de pago</div>
+                ${pagos.map(p => `
+                    <div>${escapeHtml(p.metodo_pago)}: ${money(p.monto)}</div>
+                `).join('')}
+            ` : ''}
+
+            <hr class="ticket-divider">
+
+            <div class="text-center">
+                <div>Atendido por:</div>
+                <strong>${escapeHtml(localStorage.getItem('userName') || '')}</strong>
+            </div>
+
+            <div class="text-center mt-2">
+                <svg id="barcodeSalida"></svg>
+            </div>
+        `;
+    }
+
+    function imprimirTicket(html, titulo, ancho) {
+        const ventana = window.open('', '_blank', 'width=420,height=750');
+
+        if (!ventana) {
+            alert('El navegador bloqueó la ventana de impresión. Permita las ventanas emergentes para este sitio.');
+            return;
+        }
+
+        ventana.document.write(`
+            <!doctype html>
+            <html lang="es">
+            <head>
+                <meta charset="utf-8">
+                <title>${escapeHtml(titulo)}</title>
+                <style>
+                    @page { size: ${ancho}mm auto; margin: 2mm; }
+                    * { box-sizing:border-box; }
+                    body {
+                        margin:0;
+                        padding:0;
+                        width:${ancho}mm;
+                        font-family:Arial,sans-serif;
+                        font-size:11px;
+                        color:#000;
+                    }
+                    .ticket {
+                        width:100%;
+                        padding:2mm;
+                    }
+                    img {
+                        display:block;
+                        margin:0 auto 5px;
+                        max-width:30mm;
+                        max-height:22mm;
+                        object-fit:contain;
+                    }
+                    .text-center { text-align:center; }
+                    .fw-bold { font-weight:700; }
+                    .ticket-divider {
+                        border:0;
+                        border-top:1px dashed #000;
+                        margin:7px 0;
+                    }
+                    .ticket-total {
+                        font-size:15px;
+                        font-weight:700;
+                    }
+                    svg {
+                        max-width:100%;
+                        height:auto;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="ticket">${html}</div>
+                <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+                <script>
+                    setTimeout(function () {
+                        try {
+                            const ingreso = document.getElementById('barcodeIngreso');
+                            const salida = document.getElementById('barcodeSalida');
+                            if (ingreso) JsBarcode(ingreso, '${String(ultimoIngreso?.movimientoId || '').replace(/'/g, "\\'")}', {
+                                format:'CODE128', displayValue:true, fontSize:11, height:42, margin:4
+                            });
+                            if (salida) JsBarcode(salida, '${String(ultimaSalida?.movimientoId || '').replace(/'/g, "\\'")}', {
+                                format:'CODE128', displayValue:true, fontSize:11, height:42, margin:4
+                            });
+                        } catch(e) {}
+                        window.print();
+                    }, 500);
+                <\/script>
+            </body>
+            </html>
+        `);
+
+        ventana.document.close();
+        ventana.focus();
+    }
+
+    async function registrarIngreso(event) {
+        event.preventDefault();
+        ocultarMensaje();
+
+        if (!turnoAbierto) {
+            mostrarMensaje('Debe abrir un turno antes de registrar el ingreso.', 'warning');
+            return;
+        }
+
+        const placa = $('ingPlaca').value.trim().toUpperCase();
+        const tipo = document.querySelector('input[name="ingTipo"]:checked');
+
+        if (!placa) {
+            alert('Ingrese la placa del vehículo.');
+            $('ingPlaca').focus();
+            return;
+        }
+
+        if (!tipo) {
+            alert('Seleccione el tipo de vehículo.');
+            return;
+        }
+
+        const button = $('btnIngreso');
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Registrando...';
+
+        try {
+            const response = await fetch('/api/movimientos/ingreso', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...authHeaders()
+                },
+                body: JSON.stringify({
+                    placa,
+                    id_tipo: tipo.value
+                })
+            });
+
+            const json = await response.json();
+
+            if (!response.ok || !json.success) {
+                throw new Error(json.message || 'No se pudo registrar el ingreso.');
+            }
+
+            ultimoIngreso = json.data;
+
+            $('compIngresoBody').innerHTML = renderTicketIngreso(ultimoIngreso);
+            $('compIngreso').classList.remove('d-none');
+
+            renderBarcode('barcodeIngreso', ultimoIngreso.movimientoId);
+
+            $('formIngreso').reset();
+
+            const firstType = document.querySelector('input[name="ingTipo"]');
+            if (firstType) firstType.checked = true;
+
+            mostrarMensaje(`Ingreso registrado correctamente. Ticket #${String(ultimoIngreso.movimientoId).padStart(6, '0')}`, 'success');
+
+        } catch (error) {
+            console.error(error);
+            mostrarMensaje(error.message || 'Error al registrar el ingreso.', 'danger');
+        } finally {
+            button.disabled = !turnoAbierto;
+            button.innerHTML = '<i class="fas fa-ticket me-2"></i>Registrar ingreso';
+        }
+    }
+
+    async function calcularSalida(event) {
+        event.preventDefault();
+        ocultarMensaje();
+
+        if (!turnoAbierto) {
+            mostrarMensaje('Debe abrir un turno antes de registrar la salida.', 'warning');
+            return;
+        }
+
+        const placa = $('salPlaca').value.trim().toUpperCase();
+
+        if (!placa) {
+            alert('Ingrese la placa del vehículo.');
+            $('salPlaca').focus();
+            return;
+        }
+
+        const button = $('btnSalida');
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Calculando...';
+
+        try {
+            const response = await fetch('/api/movimientos/calcular-salida', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...authHeaders()
+                },
+                body: JSON.stringify({ placa })
+            });
+
+            const json = await response.json();
+
+            if (!response.ok || !json.success) {
+                throw new Error(json.message || 'No se pudo calcular la salida.');
+            }
+
+            facturaPendiente = json.data;
+            ultimaSalida = json.data;
+
+            $('compSalidaBody').innerHTML = renderTicketSalida(ultimaSalida);
+            $('compSalida').classList.remove('d-none');
+
+            renderBarcode('barcodeSalida', ultimaSalida.movimientoId);
+
+            abrirModalPago(facturaPendiente);
+
+        } catch (error) {
+            console.error(error);
+            mostrarMensaje(error.message || 'Error al calcular la salida.', 'danger');
+        } finally {
+            button.disabled = !turnoAbierto;
+            button.innerHTML = '<i class="fas fa-calculator me-2"></i>Calcular salida';
+        }
+    }
+
+    function abrirModalPago(factura) {
+        const modalElement = $('pagoModal');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        const container = $('pagosContainer');
+        const confirmButton = $('btnConfirmPagos');
+
+        container.innerHTML = '';
+
+        function agregarPago(metodo = 'efectivo', monto = '') {
+            const row = document.createElement('div');
+            row.className = 'd-flex gap-2 align-items-center';
+
+            row.innerHTML = `
+                <select class="form-select metodo">
+                    <option value="efectivo">Efectivo</option>
+                    <option value="tarjeta">Tarjeta</option>
+                    <option value="QR">QR</option>
+                </select>
+                <input type="number" class="form-control monto" min="0" step="0.01" value="${monto}" placeholder="Monto">
+                <button type="button" class="btn btn-outline-danger btnDel">&times;</button>
+            `;
+
+            row.querySelector('.metodo').value = metodo;
+
+            row.querySelector('.btnDel').addEventListener('click', () => {
+                row.remove();
+                actualizarPago();
+            });
+
+            row.querySelector('.monto').addEventListener('input', actualizarPago);
+
+            container.appendChild(row);
+        }
+
+        function actualizarPago() {
+            const montos = Array.from(container.querySelectorAll('.monto'))
+                .map(input => Number(input.value || 0));
+
+            const pagado = montos.reduce((a, b) => a + b, 0);
+            const diferencia = pagado - Number(factura.total || 0);
+
+            $('pagoSum').textContent = money(pagado);
+
+            if (diferencia >= 0) {
+                $('pagoDiff').textContent = `Vuelto: ${money(diferencia)}`;
+                $('pagoDiff').className = 'text-success';
+            } else {
+                $('pagoDiff').textContent = `Falta: ${money(Math.abs(diferencia))}`;
+                $('pagoDiff').className = 'text-danger';
+            }
+
+            confirmButton.disabled = pagado + 0.0001 < Number(factura.total || 0);
+        }
+
+        $('pagoTotal').textContent = money(factura.total);
+
+        agregarPago($('salMetodo').value, factura.total);
+        actualizarPago();
+
+        $('btnAddPago').onclick = () => {
+            agregarPago('efectivo', '');
+            actualizarPago();
+        };
+
+        confirmButton.onclick = async function () {
+            const pagos = Array.from(container.querySelectorAll('.d-flex')).map(row => ({
+                metodo_pago: row.querySelector('.metodo').value,
+                monto: Number(row.querySelector('.monto').value || 0)
+            })).filter(p => p.monto > 0);
+
+            const totalPagado = pagos.reduce((sum, pago) => sum + pago.monto, 0);
+
+            if (totalPagado + 0.0001 < Number(factura.total || 0)) {
+                alert('El pago registrado es menor al total.');
+                return;
+            }
+
+            confirmButton.disabled = true;
+            confirmButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando...';
+
+            try {
+                const response = await fetch('/api/movimientos/confirmar-salida', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...authHeaders()
+                    },
+                    body: JSON.stringify({
+                        id_movimiento: factura.movimientoId,
+                        pagos
+                    })
+                });
+
+                const json = await response.json();
+
+                if (!response.ok || !json.success) {
+                    throw new Error(json.message || 'No se pudo confirmar la salida.');
+                }
+
+                ultimaSalida = json.data;
+                facturaPendiente = null;
+
+                $('compSalidaBody').innerHTML = renderTicketSalida(ultimaSalida);
+                $('compSalida').classList.remove('d-none');
+
+                modal.hide();
+
+                mostrarMensaje(
+                    `Salida registrada correctamente. Total: ${money(ultimaSalida.total)}`,
+                    'success'
+                );
+
+                $('formSalida').reset();
+
+                setTimeout(() => {
+                    imprimirTicket(
+                        renderTicketSalida(ultimaSalida),
+                        'Comprobante de Salida',
+                        80
+                    );
+                }, 250);
+
+            } catch (error) {
+                console.error(error);
+                alert(error.message || 'Error al confirmar el pago.');
+            } finally {
+                confirmButton.disabled = false;
+                confirmButton.innerHTML = 'Confirmar pago';
+            }
+        };
+
+        modal.show();
+    }
+
+    $('formIngreso').addEventListener('submit', registrarIngreso);
+    $('formSalida').addEventListener('submit', calcularSalida);
+
+    $('btnPrintIngreso58').addEventListener('click', () => {
+        if (ultimoIngreso) imprimirTicket(renderTicketIngreso(ultimoIngreso), 'Comprobante de Ingreso', 58);
+    });
+
+    $('btnPrintIngreso80').addEventListener('click', () => {
+        if (ultimoIngreso) imprimirTicket(renderTicketIngreso(ultimoIngreso), 'Comprobante de Ingreso', 80);
+    });
+
+    $('btnPrintSalida58').addEventListener('click', () => {
+        if (ultimaSalida) imprimirTicket(renderTicketSalida(ultimaSalida), 'Comprobante de Salida', 58);
+    });
+
+    $('btnPrintSalida80').addEventListener('click', () => {
+        if (ultimaSalida) imprimirTicket(renderTicketSalida(ultimaSalida), 'Comprobante de Salida', 80);
+    });
+
+    async function iniciar() {
+        await cargarEmpresa();
+        await cargarTiposVehiculos();
+        await cargarTurno();
+    }
+
+    iniciar();
+})();
+</script>
+</body>
+</html>

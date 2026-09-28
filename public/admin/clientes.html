@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LKCO Estacionamiento - Clientes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../css/dashboard.css" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div class="logo-container">
+            <div class="logo-circle">
+                <span class="logo-text">LK</span>
+            </div>
+        </div>
+        <h5 class="mt-3 text-white">LKCO Estacionamiento</h5>
+    </div>
+
+    <nav class="sidebar-nav">
+        <ul class="nav flex-column">
+
+            <li class="nav-item">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="vehiculos.html" class="nav-link">
+                    <i class="fas fa-car"></i>
+                    <span>Vehículos</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="ingreso-salida.html" class="nav-link">
+                    <i class="fas fa-right-left"></i>
+                    <span>Ingreso / Salida</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="mensualidades.html" class="nav-link">
+                    <i class="fas fa-calendar-check"></i>
+                    <span>Mensualidades</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="clientes.html" class="nav-link active">
+                    <i class="fas fa-address-book"></i>
+                    <span>Clientes</span>
+                </a>
+            </li>
+
+            <li class="nav-item admin-only">
+                <a href="configuracion.html" class="nav-link">
+                    <i class="fas fa-gear"></i>
+                    <span>Configuración</span>
+                </a>
+            </li>
+
+            <li class="nav-item admin-only">
+                <a href="tipos-vehiculos.html" class="nav-link">
+                    <i class="fas fa-tags"></i>
+                    <span>Tipos de Vehículos</span>
+                </a>
+            </li>
+
+            <li class="nav-item admin-only">
+                <a href="tarifas.html" class="nav-link">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span>Tarifas</span>
+                </a>
+            </li>
+
+            <li class="nav-item admin-only">
+                <a href="usuarios.html" class="nav-link">
+                    <i class="fas fa-users"></i>
+                    <span>Usuarios</span>
+                </a>
+            </li>
+
+            <li class="nav-item admin-only">
+                <a href="reportes.html" class="nav-link">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reportes</span>
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+        <a href="#" class="nav-link" id="btnLogout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Cerrar Sesión</span>
+        </a>
+    </div>
+</div>
+
+<div class="main-content">
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+
+            <button class="btn btn-link sidebar-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="nav-link">
+                            <i class="fas fa-user-circle me-2"></i>
+                            <span id="userName">Usuario</span>
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">
+                    <i class="fas fa-address-book me-2"></i>
+                    Clientes
+                </h2>
+                <p class="text-muted mb-0">
+                    Gestión de clientes del establecimiento
+                </p>
+            </div>
+
+            <button class="btn btn-primary" id="btnNuevoCliente">
+                <i class="fas fa-plus me-2"></i>
+                Nuevo Cliente
+            </button>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+
+                <div class="row g-3">
+
+                    <div class="col-md-5">
+                        <label class="form-label">Buscar por RTN</label>
+
+                        <div class="input-group">
+                            <input
+                                type="text"
+                                id="buscarRtn"
+                                class="form-control"
+                                maxlength="14"
+                                placeholder="Ingrese RTN">
+
+                            <button
+                                class="btn btn-outline-primary"
+                                id="btnBuscarRtn">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-5">
+                        <label class="form-label">Buscar por nombre</label>
+
+                        <input
+                            type="text"
+                            id="buscarNombre"
+                            class="form-control"
+                            placeholder="Nombre o razón social">
+                    </div>
+
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button
+                            class="btn btn-outline-secondary w-100"
+                            id="btnLimpiar">
+                            <i class="fas fa-rotate-left me-1"></i>
+                            Limpiar
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+
+            <div class="card-header bg-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Clientes registrados
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>RTN</th>
+                                <th>Nombre / Razón Social</th>
+                                <th>Nombre Comercial</th>
+                                <th>Teléfono</th>
+                                <th>Correo</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="clientesTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    Cargando clientes...
+                                </td>
+                            </tr>
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal Cliente -->
+<div class="modal fade" id="clienteModal" tabindex="-1">
+
+    <div class="modal-dialog modal-lg">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title" id="clienteModalTitle">
+                    Nuevo Cliente
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <form id="clienteForm">
+
+                <div class="modal-body">
+
+                    <input type="hidden" id="idCliente">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                RTN <span class="text-danger">*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                id="rtn"
+                                class="form-control"
+                                maxlength="14"
+                                minlength="14"
+                                inputmode="numeric"
+                                required>
+
+                            <div class="form-text">
+                                Debe contener exactamente 14 dígitos.
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                Tipo de contribuyente
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <select
+                                id="tipoContribuyente"
+                                class="form-select"
+                                required>
+
+                                <option value="">Seleccione...</option>
+                                <option value="persona_natural">
+                                    Persona Natural
+                                </option>
+                                <option value="comerciante_individual">
+                                    Comerciante Individual
+                                </option>
+                                <option value="persona_juridica">
+                                    Persona Jurídica
+                                </option>
+
+                            </select>
+                        </div>
+
+                        <div class="col-md-7">
+                            <label class="form-label">
+                                Nombre / Razón Social
+                                <span class="text-danger">*</span>
+                            </label>
+
+                            <input
+                                type="text"
+                                id="nombreRazonSocial"
+                                class="form-control"
+                                maxlength="200"
+                                required>
+                        </div>
+
+                        <div class="col-md-5">
+                            <label class="form-label">
+                                Nombre Comercial
+                            </label>
+
+                            <input
+                                type="text"
+                                id="nombreComercial"
+                                class="form-control"
+                                maxlength="200">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">
+                                Dirección
+                            </label>
+
+                            <textarea
+                                id="direccion"
+                                class="form-control"
+                                rows="2"
+                                maxlength="300"></textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                Teléfono
+                            </label>
+
+                            <input
+                                type="text"
+                                id="telefono"
+                                class="form-control"
+                                maxlength="50">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                Correo
+                            </label>
+
+                            <input
+                                type="email"
+                                id="correo"
+                                class="form-control"
+                                maxlength="150">
+                        </div>
+
+                        <div
+                            class="col-12"
+                            id="estadoContainer"
+                            style="display:none;">
+
+                            <div class="form-check form-switch">
+
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    id="activo">
+
+                                <label
+                                    class="form-check-label"
+                                    for="activo">
+                                    Cliente activo
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>
+                        Guardar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal Auditoría -->
+<div class="modal fade" id="auditoriaModal" tabindex="-1">
+
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+                    <i class="fas fa-clock-rotate-left me-2"></i>
+                    Auditoría del Cliente
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div id="auditoriaContenido">
+                    <div class="text-center text-muted py-4">
+                        Cargando auditoría...
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div
+    class="position-fixed top-0 end-0 p-3"
+    style="z-index:1100">
+
+    <div id="toastContainer"></div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/footer.js"></script>
+<script src="../js/datetime.js"></script>
+<script src="../js/clientes.js"></script>
+
+</body>
+</html>
